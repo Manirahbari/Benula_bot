@@ -10,10 +10,10 @@ from datetime import datetime
 BOT_TOKEN = "8896407692:AAG8iRQDKAWx8DgCyR5ICO25tmyqUiNBPbw"
 WEBAPP_URL = "https://melonacolloction.github.io/BenulaOfficial-/"
 
-# آیدی ادمین
+# Admin ID
 ADMIN_ID = 7713208330
 
-# فایل ذخیره آمار
+# Stats file
 STATS_FILE = "stats.json"
 
 # ============================================================
@@ -25,31 +25,31 @@ bot = telebot.TeleBot(BOT_TOKEN)
 #  STATS MANAGEMENT
 # ============================================================
 def load_stats():
-    """بارگذاری آمار از فایل"""
+    """Load stats from file"""
     if os.path.exists(STATS_FILE):
         try:
             with open(STATS_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except:
-            return {"users": [], "total_tokens": 0}
-    return {"users": [], "total_tokens": 0}
+            return {"users": []}
+    return {"users": []}
 
 def save_stats(stats):
-    """ذخیره آمار در فایل"""
+    """Save stats to file"""
     with open(STATS_FILE, 'w', encoding='utf-8') as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
 def register_user(user_id, username, first_name):
-    """ثبت کاربر جدید"""
+    """Register new user"""
     stats = load_stats()
     
-    # بررسی اینکه کاربر قبلاً ثبت شده یا نه
+    # Check if user already exists
     existing_user = next((u for u in stats['users'] if u['id'] == user_id), None)
     
     if existing_user:
         return False
     
-    # ثبت کاربر جدید
+    # Register new user
     new_user = {
         'id': user_id,
         'username': username,
@@ -61,33 +61,29 @@ def register_user(user_id, username, first_name):
     save_stats(stats)
     return True
 
-def update_total_tokens(amount):
-    """بروزرسانی کل توکن‌ها"""
+def get_total_users():
+    """Get total number of registered users"""
     stats = load_stats()
-    stats['total_tokens'] = stats.get('total_tokens', 0) + amount
-    save_stats(stats)
+    return len(stats.get('users', []))
 
 # ============================================================
-#  /ADMIN COMMAND - فقط برای ادمین
+#  /ADMIN COMMAND - Only for admin
 # ============================================================
 @bot.message_handler(commands=['admin'])
 def admin_stats(message):
-    """نمایش آمار کلی - فقط برای ادمین"""
+    """Show total users - Admin only"""
     if message.from_user.id != ADMIN_ID:
-        bot.reply_to(message, "⛔ شما دسترسی به این بخش را ندارید!")
+        bot.reply_to(message, "⛔ You don't have access to this section!")
         return
     
-    stats = load_stats()
-    total_users = len(stats.get('users', []))
-    total_tokens = stats.get('total_tokens', 0)
+    total_users = get_total_users()
     
     stats_text = f"""
-📊 **آمار Benula Airdrop**
+📊 **Benula Airdrop Stats**
 
-👥 **تعداد کل کاربران:** {total_users}
-🪙 **کل توکن‌های توزیع شده:** {total_tokens:,}
+👥 **Total Registered Users:** {total_users}
 
-📅 آخرین بروزرسانی: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+📅 Last update: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 """
     
     bot.reply_to(message, stats_text, parse_mode='Markdown')
@@ -100,7 +96,7 @@ def send_welcome(message):
     username = message.from_user.first_name or "User"
     user_id = message.from_user.id
     
-    # ثبت کاربر
+    # Register user
     registered = register_user(
         user_id,
         message.from_user.username,
