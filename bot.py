@@ -1,67 +1,71 @@
-import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes
+import telebot
+from telebot import types
 
 # ============================================================
-#  تنظیمات
+#  CONFIG
 # ============================================================
-BOT_TOKEN = os.environ.get("BOT_TOKEN")  # از متغیر محیطی میخونه
-SITE_URL = "https://melonacolloction.github.io/BenulaOfficial-/"
+BOT_TOKEN = "8896407692:AAG8iRQDKAWx8DgCyR5ICO25tmyqUiNBPbw"
+SITE_URL = "https://melonacollocton.github.io/Benula"
 
 # ============================================================
-#  دستور /start
+#  INIT BOT
 # ============================================================
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    first_name = user.first_name or "User"
+bot = telebot.TeleBot(BOT_TOKEN)
+
+# ============================================================
+#  /START COMMAND
+# ============================================================
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    username = message.from_user.first_name or "User"
     
-    ref_code = context.args[0] if context.args else ''
-    if ref_code.startswith('ref_'):
-        ref_code = ref_code.replace('ref_', '')
+    # بررسی کد معرف
+    ref_code = None
+    text_parts = message.text.split()
+    if len(text_parts) > 1:
+        potential_ref = text_parts[1]  # ref_ACN2kn
+        if potential_ref.startswith('ref_'):
+            ref_code = potential_ref[4:]  # ACN2kn
     
+    # ساخت لینک
     if ref_code:
-        web_app_url = f"{SITE_URL}?ref={ref_code}"
+        link = f"{SITE_URL}?ref={ref_code}"
+        welcome_text = f"""
+🌟 Welcome {username}! 
+
+Join **Benula Airdrop**! 🎉
+
+✅ Referral code `{ref_code}` applied!
+🔗 Click below to enter the app
+        """
     else:
-        web_app_url = SITE_URL
-    
-    message = f"""
-🎉 <b>Welcome to Benula Airdrop, {first_name}!</b>
+        link = SITE_URL
+        welcome_text = f"""
+🌟 Welcome {username}! 
 
-💰 <b>What is Benula?</b>
-Benula is a decentralized airdrop platform where you can earn free tokens by completing simple tasks.
+Join **Benula Airdrop**! 🎉
 
-📋 <b>How to get started?</b>
-1️⃣ Click the button below to open the app
-2️⃣ Join our channel and group
-3️⃣ Complete tasks and earn rewards
-
-🚀 <b>Start earning now!</b>
-"""
+🔗 Click below to enter the app
+        """
     
-    keyboard = [
-        [InlineKeyboardButton("🚀 Open App", web_app={"url": web_app_url})],
-        [
-            InlineKeyboardButton("📢 Channel", url="https://t.me/Benula_Official"),
-            InlineKeyboardButton("💬 Group", url="https://t.me/BenulaOfficial")
-        ],
-        [InlineKeyboardButton("▶️ YouTube", url="https://www.youtube.com/@BenulaOfficial")]
-    ]
+    # دکمه‌ها
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    keyboard.add(types.InlineKeyboardButton("🚀 Open App", url=link))
+    keyboard.add(
+        types.InlineKeyboardButton("📢 Channel", url="https://t.me/Benula_Official"),
+        types.InlineKeyboardButton("💬 Group", url="https://t.me/BenulaOfficial")
+    )
     
-    await update.message.reply_text(
-        message,
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+    bot.send_message(
+        message.chat.id,
+        welcome_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
     )
 
 # ============================================================
-#  راه‌اندازی ربات
+#  RUN
 # ============================================================
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    
-    print("🚀 Benula bot is running...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    print("🤖 Benula Bot Running...")
+    bot.infinity_polling()
