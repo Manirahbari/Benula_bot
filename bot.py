@@ -1,5 +1,6 @@
 import telebot
 from telebot import types
+import os
 
 # ============================================================
 #  CONFIG
@@ -73,10 +74,35 @@ You've joined **Melona Airdrop**! 🎉
     )
 
 # ============================================================
-#  RUN BOT
+#  WEBHOOK MODE (برای Railway)
+# ============================================================
+from flask import Flask, request
+app = Flask(__name__)
+
+@app.route('/' + BOT_TOKEN, methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
+    bot.process_new_updates([update])
+    return 'ok', 200
+
+@app.route('/', methods=['GET'])
+def index():
+    return 'Melona Bot is running on Railway! 🚀'
+
+# ============================================================
+#  RUN - WEBHOOK MODE
 # ============================================================
 if __name__ == '__main__':
-    print("🤖 Melona Bot is running...")
+    # Remove webhook if exists
+    bot.remove_webhook()
+    
+    # Set webhook
+    webhook_url = f"https://{os.environ.get('RAILWAY_STATIC_URL', 'localhost')}/{BOT_TOKEN}"
+    bot.set_webhook(url=webhook_url)
+    
+    print("🤖 Melona Bot is running on Railway with Webhook!")
     print(f"🔗 WebApp URL: {WEBAPP_URL}")
-    print("✅ Waiting for /start commands...")
-    bot.infinity_polling()
+    print(f"🔗 Webhook URL: {webhook_url}")
+    
+    # Run Flask app
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
