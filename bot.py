@@ -1,12 +1,11 @@
 import telebot
 from telebot import types
-import os
 
 # ============================================================
 #  CONFIG
 # ============================================================
-BOT_TOKEN = "8863949767:AAGqoFcRmiGuqxJJkHhICOtyJoXqtr9ArOQ"
-WEBAPP_URL = "https://melonacolloction.github.io/MelonaOfficial/"
+BOT_TOKEN = "8896407692:AAG8iRQDKAWx8DgCyR5ICO25tmyqUiNBPbw"
+WEBAPP_URL = "https://melonacolloction.github.io/BenulaOfficial-/"
 
 # ============================================================
 #  INIT BOT
@@ -14,7 +13,7 @@ WEBAPP_URL = "https://melonacolloction.github.io/MelonaOfficial/"
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # ============================================================
-#  /START COMMAND
+#  /START COMMAND - ONLY COMMAND
 # ============================================================
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -26,9 +25,9 @@ def send_welcome(message):
     if len(text_parts) > 1:
         potential_ref = text_parts[1]
         if potential_ref.startswith('ref_'):
-            ref_code = potential_ref  # کامل (ref_ABC123)
+            ref_code = potential_ref[4:]
         elif len(potential_ref) == 6:
-            ref_code = f"ref_{potential_ref}"
+            ref_code = potential_ref
     
     # Build WebApp URL with referral code
     if ref_code:
@@ -36,7 +35,7 @@ def send_welcome(message):
         welcome_text = f"""
 🌟 Welcome {username}! 
 
-You've joined **Melona Airdrop**! 🎉
+You've joined **Benula Airdrop**! 🎉
 
 ✅ Referral code `{ref_code}` applied!
 👇 Click the button below to open the app
@@ -46,15 +45,15 @@ You've joined **Melona Airdrop**! 🎉
         welcome_text = f"""
 🌟 Welcome {username}! 
 
-You've joined **Melona Airdrop**! 🎉
+You've joined **Benula Airdrop**! 🎉
 
 👇 Click the button below to open the app
         """
     
-    # Create keyboard with WebApp button (opens INSIDE Telegram)
+    # Create keyboard with WebApp button
     keyboard = types.InlineKeyboardMarkup(row_width=1)
     
-    # WebApp button - opens inside Telegram (not external browser)
+    # WebApp button - opens directly inside Telegram
     btn_open = types.InlineKeyboardButton(
         "🚀 Open App",
         web_app=types.WebAppInfo(url=webapp_url)
@@ -62,8 +61,8 @@ You've joined **Melona Airdrop**! 🎉
     
     keyboard.add(btn_open)
     keyboard.add(
-        types.InlineKeyboardButton("📢 Channel", url="https://t.me/MelonaOfficial"),
-        types.InlineKeyboardButton("💬 Group", url="https://t.me/MelonaOfficialGroup")
+        types.InlineKeyboardButton("📢 Channel", url="https://t.me/Benula_Official"),
+        types.InlineKeyboardButton("💬 Group", url="https://t.me/BenulaOfficial")
     )
     
     bot.send_message(
@@ -74,35 +73,10 @@ You've joined **Melona Airdrop**! 🎉
     )
 
 # ============================================================
-#  WEBHOOK MODE (برای Railway)
-# ============================================================
-from flask import Flask, request
-app = Flask(__name__)
-
-@app.route('/' + BOT_TOKEN, methods=['POST'])
-def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
-    bot.process_new_updates([update])
-    return 'ok', 200
-
-@app.route('/', methods=['GET'])
-def index():
-    return 'Melona Bot is running on Railway! 🚀'
-
-# ============================================================
-#  RUN - WEBHOOK MODE
+#  RUN BOT
 # ============================================================
 if __name__ == '__main__':
-    # Remove webhook if exists
-    bot.remove_webhook()
-    
-    # Set webhook
-    webhook_url = f"https://{os.environ.get('RAILWAY_STATIC_URL', 'localhost')}/{BOT_TOKEN}"
-    bot.set_webhook(url=webhook_url)
-    
-    print("🤖 Melona Bot is running on Railway with Webhook!")
+    print("🤖 Benula Bot is running...")
     print(f"🔗 WebApp URL: {WEBAPP_URL}")
-    print(f"🔗 Webhook URL: {webhook_url}")
-    
-    # Run Flask app
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    print("✅ Waiting for /start commands...")
+    bot.infinity_polling()
